@@ -1,0 +1,8 @@
+opencv-python
+numpy
+matplotlib
+timm
+tqdm
+pillow
+#albumentations
+#scikit-learn
