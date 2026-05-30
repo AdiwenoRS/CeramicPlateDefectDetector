@@ -5,4 +5,4 @@ timm
 tqdm
 pillow
 #albumentations
-#scikit-learn
+scikit-learn

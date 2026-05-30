@@ -1,0 +1,8 @@
+.venv/
+.ipynb_checkpoints/
+__pycache__/
+model_dinov2epoch1.pth
+model_dinov2epoch2.pth
+model_dinov2epoch3.pth
+model_dinov2epoch4.pth
+model_dinov2epoch5.pth
