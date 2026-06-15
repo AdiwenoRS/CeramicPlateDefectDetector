@@ -1,10 +1,14 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
 """
 Ceramic Tile Defect Detector
 Backend-first Streamlit app
 Pipeline: Image/Webcam → Grayscale → (Detect Circle) → Invert → Exposure +30% → Sharpen → Crop (Apply Mask) → DINOv2 → Prediction → Threshold 70% → SQLite
 """
 
+<<<<<<< HEAD
 import os
 import sqlite3
 =======
@@ -17,6 +21,10 @@ import threading
 import time
 from collections import deque
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+import os
+import sqlite3
+>>>>>>> 49273b9 (New layout and features)
 from datetime import datetime
 from pathlib import Path
 
@@ -38,6 +46,7 @@ except ImportError:
     WEBRTC_AVAILABLE = False
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # ══════════════════════════════════════════════════════════════════════════════
 # CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
@@ -46,11 +55,17 @@ except ImportError:
 # CONFIG
 ════
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+# CONFIG
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 MODEL_PATH = Path("best_model_dinov2.pth")
 IMG_SIZE   = 224
 DB_PATH    = "predictions.db"
 DEVICE     = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # ─────────────────────────────────────────────────────────────────────────────
 CLASSES_2 = ["crack", "spot"]
@@ -66,37 +81,40 @@ DEFECT_CLASSES_FOR_THRESHOLD = ["crack", "spot"]
 # DATABASE
 # ══════════════════════════════════════════════════════════════════════════════
 =======
+=======
+# ─────────────────────────────────────────────────────────────────────────────
+>>>>>>> 49273b9 (New layout and features)
 CLASSES_2 = ["crack", "spot"]
 CLASSES_3 = ["crack", "pinhole", "spot"]
 
-# Default pipeline params
-DEFAULT_EXPOSURE      = 0.5   # alpha untuk convertScaleAbs
-DEFAULT_SHARPEN_AMT   = 3.0   # weight untuk addWeighted
-DEFAULT_CONF_THRESH   = 95.0  # %
+# THRESHOLD: Jika prediksi crack/spot di bawah nilai ini, dianggap "normal"
+CONFIDENCE_THRESHOLD = 70.0  # Dalam persen (70%)
+DEFECT_CLASSES_FOR_THRESHOLD = ["crack", "spot"]
+# ─────────────────────────────────────────────────────────────────────────────
 
-DEFECT_CLASSES_FOR_THRESHOLD = ["crack", "spot", "pinhole"]
 
-# Auto-save cooldown (detik) agar DB tidak membludak saat live
-AUTOSAVE_COOLDOWN = 5.0
-
-# Max FPS untuk VideoProcessor (batasi beban CPU/GPU)
-MAX_FPS = 10
-_MIN_FRAME_INTERVAL = 1.0 / MAX_FPS  # ~0.333 s
-
-════
+# ══════════════════════════════════════════════════════════════════════════════
 # DATABASE
+<<<<<<< HEAD
 ════
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 def init_db() -> None:
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             source      TEXT    NOT NULL,
             filename    TEXT,
             label       TEXT    NOT NULL,
             confidence  REAL    NOT NULL,
+<<<<<<< HEAD
             circle_found INTEGER DEFAULT 0,
             created_at  TEXT    NOT NULL
         )
@@ -107,12 +125,13 @@ def init_db() -> None:
             filename     TEXT,
             label        TEXT    NOT NULL,
             confidence   REAL    NOT NULL,
+=======
+>>>>>>> 49273b9 (New layout and features)
             circle_found INTEGER DEFAULT 0,
-            exposure     REAL    DEFAULT 1.3,
-            sharpen      REAL    DEFAULT 1.5,
-            created_at   TEXT    NOT NULL
+            created_at  TEXT    NOT NULL
         )
     """)
+<<<<<<< HEAD
     # Migrasi: tambah kolom baru jika belum ada (backward compat)
     try:
         conn.execute("ALTER TABLE predictions ADD COLUMN exposure REAL DEFAULT 1.3")
@@ -120,11 +139,14 @@ def init_db() -> None:
     except Exception:
         pass
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+>>>>>>> 49273b9 (New layout and features)
     conn.commit()
     conn.close()
 
 
 def save_prediction(source: str, filename: str, label: str,
+<<<<<<< HEAD
 <<<<<<< HEAD
                     confidence: float, circle_found: bool = False) -> None:
     conn = sqlite3.connect(DB_PATH)
@@ -137,20 +159,28 @@ def save_prediction(source: str, filename: str, label: str,
 =======
                     confidence: float, circle_found: bool = False,
                     exposure: float = 1.3, sharpen: float = 1.5) -> None:
+=======
+                    confidence: float, circle_found: bool = False) -> None:
+>>>>>>> 49273b9 (New layout and features)
     conn = sqlite3.connect(DB_PATH)
     conn.execute(
         "INSERT INTO predictions "
-        "(source, filename, label, confidence, circle_found, exposure, sharpen, created_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "(source, filename, label, confidence, circle_found, created_at) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
         (source, filename or "-", label, round(confidence, 4),
+<<<<<<< HEAD
          int(circle_found), round(exposure, 2), round(sharpen, 2),
          datetime.now().isoformat(timespec="seconds")),
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+         int(circle_found), datetime.now().isoformat(timespec="seconds")),
+>>>>>>> 49273b9 (New layout and features)
     )
     conn.commit()
     conn.close()
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 def get_history(limit: int = 30) -> list:
     conn = sqlite3.connect(DB_PATH)
@@ -162,12 +192,19 @@ def get_history(limit: int = 50) -> list:
     rows = conn.execute(
         "SELECT id, source, filename, label, confidence, circle_found, exposure, sharpen, created_at "
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+def get_history(limit: int = 30) -> list:
+    conn = sqlite3.connect(DB_PATH)
+    rows = conn.execute(
+        "SELECT id, source, filename, label, confidence, circle_found, created_at "
+>>>>>>> 49273b9 (New layout and features)
         "FROM predictions ORDER BY id DESC LIMIT ?", (limit,)
     ).fetchall()
     conn.close()
     return rows
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 def get_stats() -> dict:
@@ -183,6 +220,8 @@ def get_stats() -> dict:
 
 
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+>>>>>>> 49273b9 (New layout and features)
 def clear_history() -> None:
     conn = sqlite3.connect(DB_PATH)
     conn.execute("DELETE FROM predictions")
@@ -190,6 +229,7 @@ def clear_history() -> None:
     conn.close()
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # ══════════════════════════════════════════════════════════════════════════════
 # MODEL — auto-detect num_classes dari checkpoint
@@ -199,10 +239,14 @@ def _get_classes_from_checkpoint(path: Path) -> list[str]:
     n  = sd["head.weight"].shape[0]
 =======
 ════
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 # MODEL — auto-detect num_classes dari checkpoint
-════
+# ══════════════════════════════════════════════════════════════════════════════
 def _get_classes_from_checkpoint(path: Path) -> list[str]:
     sd = torch.load(path, map_location="cpu")
+<<<<<<< HEAD
     head_key = None
     for key in sd.keys():
         if key.endswith(".weight") and "head" in key:
@@ -218,6 +262,9 @@ def _get_classes_from_checkpoint(path: Path) -> list[str]:
         st.stop()
     n = sd[head_key].shape[0]
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    n  = sd["head.weight"].shape[0]
+>>>>>>> 49273b9 (New layout and features)
     if n == 2:
         return CLASSES_2
     elif n == 3:
@@ -232,6 +279,7 @@ def load_model() -> tuple[nn.Module, list[str]]:
         st.error(f"File model tidak ditemukan: {MODEL_PATH}")
         st.stop()
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     classes    = _get_classes_from_checkpoint(MODEL_PATH)
     num_classes = len(classes)
@@ -240,6 +288,12 @@ def load_model() -> tuple[nn.Module, list[str]]:
     classes     = _get_classes_from_checkpoint(MODEL_PATH)
     num_classes = len(classes)
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+
+    classes    = _get_classes_from_checkpoint(MODEL_PATH)
+    num_classes = len(classes)
+
+>>>>>>> 49273b9 (New layout and features)
     model = timm.create_model(
         "vit_small_patch14_dinov2.lvd142m",
         pretrained=False,
@@ -248,17 +302,23 @@ def load_model() -> tuple[nn.Module, list[str]]:
     in_features = getattr(model, "num_features", None) or getattr(model, "embed_dim", None)
     model.head  = nn.Linear(in_features, num_classes)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
 =======
     state_dict  = torch.load(MODEL_PATH, map_location=DEVICE)
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+
+    state_dict = torch.load(MODEL_PATH, map_location=DEVICE)
+>>>>>>> 49273b9 (New layout and features)
     model.load_state_dict(state_dict)
     model.eval()
     model.to(DEVICE)
     return model, classes
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # ══════════════════════════════════════════════════════════════════════════════
 # CIRCLE DETECTION (Hanya deteksi & buat mask, tanpa apply crop dulu)
@@ -309,40 +369,60 @@ def draw_circle_overlay(img_rgb: np.ndarray, cx: int, cy: int, r: int) -> np.nda
 ════
 # CIRCLE DETECTION
 ════
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+# CIRCLE DETECTION (Hanya deteksi & buat mask, tanpa apply crop dulu)
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 def detect_circle_mask(gray: np.ndarray) -> tuple[np.ndarray | None, bool, tuple | None]:
+    """
+    Deteksi lingkaran terbesar pada gambar grayscale menggunakan HoughCircles.
+    Menghasilkan mask biner, tetapi BELUM meng-aplikasikannya ke gambar.
+    """
     h, w    = gray.shape
     blurred = cv2.GaussianBlur(gray, (9, 9), 2)
+
     circles = cv2.HoughCircles(
         blurred,
         cv2.HOUGH_GRADIENT,
-        dp        = 1.2,
-        minDist   = min(h, w) * 0.4,
-        param1    = 100,
-        param2    = 40,
-        minRadius = int(min(h, w) * 0.2),
-        maxRadius = int(min(h, w) * 0.55),
+        dp       = 1.2,
+        minDist  = min(h, w) * 0.4,
+        param1   = 100,
+        param2   = 40,
+        minRadius= int(min(h, w) * 0.2),
+        maxRadius= int(min(h, w) * 0.55),
     )
+
     if circles is None:
         return None, False, None
+
     circles = np.round(circles[0]).astype(int)
     cx, cy, r = max(circles, key=lambda c: c[2])
+
+    # Buat circular mask
     mask = np.zeros_like(gray)
     cv2.circle(mask, (cx, cy), r, 255, thickness=-1)
+
     return mask, True, (cx, cy, r)
 
 
-def draw_circle_overlay(img_rgb: np.ndarray, cx: int, cy: int, r: int,
-                        color: tuple = (0, 220, 0), thickness: int = 3) -> np.ndarray:
+def draw_circle_overlay(img_rgb: np.ndarray, cx: int, cy: int, r: int) -> np.ndarray:
     overlay = img_rgb.copy()
-    cv2.circle(overlay, (cx, cy), r, color, thickness)
-    cv2.circle(overlay, (cx, cy), 5, color, -1)
+    cv2.circle(overlay, (cx, cy), r, (0, 220, 0), 3)
+    cv2.circle(overlay, (cx, cy), 4, (0, 220, 0), -1)
     return overlay
 
 
+<<<<<<< HEAD
 ════
 # PREPROCESSING PIPELINE (exposure & sharpen bisa dikontrol)
 ════
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+# PREPROCESSING PIPELINE
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 _transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((IMG_SIZE, IMG_SIZE)),
@@ -351,6 +431,7 @@ _transform = transforms.Compose([
 ])
 
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 def preprocess(img_rgb: np.ndarray) -> dict:
     """
@@ -371,20 +452,39 @@ def preprocess(img_rgb: np.ndarray,
     """
     Pipeline lengkap dengan exposure & sharpen yang dapat dikonfigurasi.
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+def preprocess(img_rgb: np.ndarray) -> dict:
+    """
+    Pipeline lengkap:
+        RGB
+         → Grayscale
+         → (Deteksi Lingkaran & Buat Mask)
+         → Inversi Warna (Seluruh gambar)
+         → Exposure +30% (Seluruh gambar)
+         → Unsharp Mask / Sharpen (Seluruh gambar)
+         → Crop / Terapkan Mask (Luar lingkaran jadi hitam)
+         → 3-channel replicate
+         → Resize + Normalize (tensor)
+>>>>>>> 49273b9 (New layout and features)
     """
     # 1. Grayscale
     gray = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2GRAY)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     # 2. Deteksi lingkaran (hanya dapatkan mask & info, gambar belum di-crop)
 =======
     # 2. Deteksi lingkaran
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    # 2. Deteksi lingkaran (hanya dapatkan mask & info, gambar belum di-crop)
+>>>>>>> 49273b9 (New layout and features)
     mask, circle_found, circle_info = detect_circle_mask(gray)
 
     # 3. Inversi Warna
     inverted = cv2.bitwise_not(gray)
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     # 4. Exposure +30%
     exposed = cv2.convertScaleAbs(inverted, alpha=1.3, beta=0)
@@ -397,34 +497,49 @@ def preprocess(img_rgb: np.ndarray,
 =======
     # 4. Exposure (alpha = exposure factor)
     exposed = cv2.convertScaleAbs(inverted, alpha=exposure, beta=0)
+=======
+    # 4. Exposure +30%
+    exposed = cv2.convertScaleAbs(inverted, alpha=1.3, beta=0)
+>>>>>>> 49273b9 (New layout and features)
 
     # 5. Sharpen via Unsharp Mask
     blurred   = cv2.GaussianBlur(exposed, (0, 0), sigmaX=3)
-    # sharpen_amt: bobot gambar tajam, (sharpen_amt - 1) dikurangi dari blurred
-    sharpened = cv2.addWeighted(exposed, sharpen_amt, blurred, -(sharpen_amt - 1), 0)
+    sharpened = cv2.addWeighted(exposed, 1.5, blurred, -0.5, 0)
 
+<<<<<<< HEAD
     # 6. Crop (apply mask setelah sharpen)
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    # 6. Crop (Terapkan mask setelah sharpen)
+>>>>>>> 49273b9 (New layout and features)
     if circle_found and mask is not None:
         cropped = cv2.bitwise_and(sharpened, sharpened, mask=mask)
     else:
         cropped = sharpened.copy()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     # 7. 3-channel untuk model
 =======
     # 7. 3-channel
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    # 7. 3-channel untuk model
+>>>>>>> 49273b9 (New layout and features)
     rgb_3ch = cv2.merge([cropped, cropped, cropped])
 
     # 8. Transform ke tensor
     tensor = _transform(rgb_3ch).unsqueeze(0).to(DEVICE)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     # 9. Overlay lingkaran di gambar asli (display saja)
 =======
     # 9. Overlay lingkaran di gambar asli (display)
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    # 9. Overlay lingkaran di gambar asli (display saja)
+>>>>>>> 49273b9 (New layout and features)
     annotated = img_rgb.copy()
     if circle_found and circle_info:
         cx, cy, r = circle_info
@@ -432,6 +547,9 @@ def preprocess(img_rgb: np.ndarray,
 
     return {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
         "tensor"        : tensor,
         "gray"          : gray,
         "inverted"      : inverted,
@@ -441,6 +559,7 @@ def preprocess(img_rgb: np.ndarray,
         "annotated_rgb" : annotated,
         "circle_found"  : circle_found,
         "circle_info"   : circle_info,
+<<<<<<< HEAD
     }
 
 
@@ -457,13 +576,19 @@ def preprocess(img_rgb: np.ndarray,
         "annotated_rgb": annotated,
         "circle_found" : circle_found,
         "circle_info"  : circle_info,
+=======
+>>>>>>> 49273b9 (New layout and features)
     }
 
 
-════
+# ══════════════════════════════════════════════════════════════════════════════
 # INFERENCE
+<<<<<<< HEAD
 ════
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 @torch.no_grad()
 def predict(model: nn.Module, tensor: torch.Tensor,
             classes: list[str]) -> tuple[str, float, np.ndarray]:
@@ -474,6 +599,7 @@ def predict(model: nn.Module, tensor: torch.Tensor,
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # ══════════════════════════════════════════════════════════════════════════════
 # UI HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -483,30 +609,37 @@ def apply_threshold(label: str, conf: float) -> tuple[str, str | None]:
     if label in DEFECT_CLASSES_FOR_THRESHOLD and conf < CONFIDENCE_THRESHOLD:
 =======
 ════
+=======
+# ══════════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
 # UI HELPERS
-════
-LABEL_COLORS = {
-    "crack"  : (220, 50,  50),
-    "spot"   : (220, 180, 30),
-    "pinhole": (50,  120, 220),
-    "normal" : (30,  200, 80),
-}
+# ══════════════════════════════════════════════════════════════════════════════
+ICONS = {"crack": "🔴", "spot": "🟡", "pinhole": "🔵", "normal": "🟢"}
 
+<<<<<<< HEAD
 
 def apply_threshold(label: str, conf: float,
                     threshold: float = DEFAULT_CONF_THRESH) -> tuple[str, str | None]:
     if label in DEFECT_CLASSES_FOR_THRESHOLD and conf < threshold:
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+def apply_threshold(label: str, conf: float) -> tuple[str, str | None]:
+    if label in DEFECT_CLASSES_FOR_THRESHOLD and conf < CONFIDENCE_THRESHOLD:
+>>>>>>> 49273b9 (New layout and features)
         return "normal", label
     return label, None
 
 
 def show_result(label: str, conf: float, probs: np.ndarray,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
                 classes: list[str], circle_found: bool, 
                 original_label: str | None = None) -> None:
     
     # Pesan khusus jika lingkaran tidak terdeteksi
+<<<<<<< HEAD
     if not circle_found:
         st.error("⚠️ **Lingkaran piring tidak terdeteksi.** Kemungkinan: Piring tidak berbentuk lingkaran, piring terlalu rusak, atau objek bukanlah piring.")
         st.info("ℹ️ Model tetap dijalankan pada gambar penuh, namun hasil prediksi mungkin tidak akurat.")
@@ -572,61 +705,68 @@ def main() -> None:
                 classes: list[str], circle_found: bool,
                 original_label: str | None = None,
                 threshold: float = DEFAULT_CONF_THRESH) -> None:
+=======
+>>>>>>> 49273b9 (New layout and features)
     if not circle_found:
-        st.error("Lingkaran piring tidak terdeteksi. Kemungkinan: piring tidak berbentuk lingkaran, terlalu rusak, atau bukan piring.")
-        st.info("Model tetap dijalankan pada gambar penuh. Hasil mungkin kurang akurat.")
-
+        st.error("⚠️ **Lingkaran piring tidak terdeteksi.** Kemungkinan: Piring tidak berbentuk lingkaran, piring terlalu rusak, atau objek bukanlah piring.")
+        st.info("ℹ️ Model tetap dijalankan pada gambar penuh, namun hasil prediksi mungkin tidak akurat.")
+    
+    icon = ICONS.get(label, "⚪")
+    
     if label == "normal" and original_label:
-        st.markdown(f"### Prediksi: `NORMAL (TIDAK ADA DEFEK)`")
+        st.markdown(f"### {icon} Prediksi: `NORMAL (TIDAK ADA DEFEK)`")
         st.info(
-            f"Model mendeteksi indikasi '{original_label}' dengan confidence {conf:.1f}%, "
-            f"namun di bawah threshold ({threshold:.0f}%) — piring dinyatakan NORMAL."
+            f"ℹ️ Model mendeteksi indikasi **'{original_label}'** dengan confidence **{conf:.1f}%**, "
+            f"namun karena di bawah threshold ({CONFIDENCE_THRESHOLD}%), piring dinyatakan **NORMAL**."
         )
     else:
-        color_hex = "#{:02x}{:02x}{:02x}".format(*LABEL_COLORS.get(label, (150, 150, 150)))
-        st.markdown(
-            f"### Prediksi: "
-            f"<span style='color:{color_hex};font-weight:700'>{label.upper()}</span>"
-            f" — {conf:.1f}%",
-            unsafe_allow_html=True,
-        )
-
-    # Progress bar per kelas
+        st.markdown(f"### {icon} Prediksi: `{label.upper()}` — {conf:.1f}%")
+        
     for i, cls in enumerate(classes):
-        pct = float(probs[i]) * 100
-        st.progress(float(probs[i]), text=f"{cls}: {pct:.1f}%")
+        st.progress(float(probs[i]), text=f"{cls}: {probs[i]*100:.1f}%")
 
 
 def show_pipeline_images(orig_rgb: np.ndarray, result: dict) -> None:
-    st.markdown("#### Pipeline Pemrosesan Gambar")
+    st.markdown("#### 🖼️ Pipeline Gambar")
+
+    # Baris 1: Original, Grayscale, Inversi Warna
     col1, col2, col3 = st.columns(3)
     with col1:
         st.image(result["annotated_rgb"],
-                 caption="1. Original + Deteksi Lingkaran", use_container_width=True)
+                 caption="① Original + Deteksi Lingkaran",
+                 use_container_width=True)
     with col2:
         st.image(result["gray"],
-                 caption="2. Grayscale", use_container_width=True, clamp=True)
+                 caption="② Grayscale",
+                 use_container_width=True, clamp=True)
     with col3:
         st.image(result["inverted"],
-                 caption="3. Inversi Warna", use_container_width=True, clamp=True)
+                 caption="③ Inversi Warna (Seluruh Gambar)",
+                 use_container_width=True, clamp=True)
 
+    # Baris 2: Exposure, Sharpened, Crop
     col4, col5, col6 = st.columns(3)
     with col4:
         st.image(result["exposed"],
-                 caption="4. Exposure (adjustable)", use_container_width=True, clamp=True)
+                 caption="④ Exposure +30%",
+                 use_container_width=True, clamp=True)
     with col5:
         st.image(result["sharpened"],
-                 caption="5. Sharpened (adjustable)", use_container_width=True, clamp=True)
+                 caption="⑤ Sharpened (Seluruh Gambar)",
+                 use_container_width=True, clamp=True)
     with col6:
-        lbl = ("6. Crop — Lingkaran Terdeteksi"
-               if result["circle_found"] else "6. Crop Gagal")
-        st.image(result["cropped"], caption=lbl, use_container_width=True, clamp=True)
+        label_crop = ("⑥ Crop (Luar Lingkaran Hitam)" if result["circle_found"] 
+                      else "⑥ Crop Gagal (Lingkaran Tidak Terdeteksi)")
+        st.image(result["cropped"],
+                 caption=label_crop,
+                 use_container_width=True, clamp=True)
 
 
-════
+# ══════════════════════════════════════════════════════════════════════════════
 # STREAMLIT APP
-════
+# ══════════════════════════════════════════════════════════════════════════════
 def main() -> None:
+<<<<<<< HEAD
     st.set_page_config(
         page_title="Ceramic Defect Detector",
         page_icon="",
@@ -635,12 +775,17 @@ def main() -> None:
 
     st.title("Ceramic Tile Defect Detector")
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    st.set_page_config(page_title="Ceramic Defect Detector", layout="centered")
+    st.title("🔍 Ceramic Tile Defect Detector")
+>>>>>>> 49273b9 (New layout and features)
 
     init_db()
     model, classes = load_model()
 
     st.caption(
         f"Model: DINOv2 ViT-Small · Device: {DEVICE} · "
+<<<<<<< HEAD
 <<<<<<< HEAD
         f"Classes ({len(classes)}): {', '.join(classes)} · "
         f"Threshold Defek: {CONFIDENCE_THRESHOLD}%"
@@ -659,20 +804,24 @@ def main() -> None:
         st.subheader("Upload Gambar Keramik")
 =======
         f"Kelas ({len(classes)}): {', '.join(classes)}"
+=======
+        f"Classes ({len(classes)}): {', '.join(classes)} · "
+        f"Threshold Defek: {CONFIDENCE_THRESHOLD}%"
+>>>>>>> 49273b9 (New layout and features)
     )
 
-    tab_upload, tab_webcam, tab_history, tab_analytics = st.tabs([
-        "Upload Gambar",
-        "Webcam Live",
-        "Riwayat Prediksi",
-        "Analitik",
+    tab_upload, tab_webcam, tab_history = st.tabs([
+        "📤 Upload Gambar",
+        "📷 Webcam Live",
+        "📋 Riwayat Prediksi",
     ])
 
-    
+    # ══════════════════════════════════════════════════════════════════════════
     # TAB 1 — UPLOAD
-    
+    # ══════════════════════════════════════════════════════════════════════════
     with tab_upload:
         st.subheader("Upload Gambar Keramik")
+<<<<<<< HEAD
 
         # ── Pipeline Controls (inline) ─────────────────────────────────────────
         with st.expander("Pipeline Controls", expanded=False):
@@ -702,6 +851,8 @@ def main() -> None:
             )
 
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+>>>>>>> 49273b9 (New layout and features)
         uploaded = st.file_uploader(
             "Pilih gambar (.jpg / .jpeg / .png)",
             type=["jpg", "jpeg", "png"],
@@ -712,11 +863,15 @@ def main() -> None:
             img_array = np.array(pil_img)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
             result             = preprocess(img_array)
             raw_label, conf, probs = predict(model, result["tensor"], classes)
             
             # Terapkan Threshold
             final_label, original_label = apply_threshold(raw_label, conf)
+<<<<<<< HEAD
 
             st.divider()
             show_pipeline_images(img_array, result)
@@ -736,23 +891,29 @@ def main() -> None:
                 result             = preprocess(img_array, exposure=up_exposure, sharpen_amt=up_sharpen)
                 raw_label, conf, probs = predict(model, result["tensor"], classes)
                 final_label, original_label = apply_threshold(raw_label, conf, up_threshold)
+=======
+>>>>>>> 49273b9 (New layout and features)
 
             st.divider()
             show_pipeline_images(img_array, result)
+
             st.divider()
-            show_result(final_label, conf, probs, classes,
-                        result["circle_found"], original_label, up_threshold)
+            show_result(final_label, conf, probs, classes, 
+                        result["circle_found"], original_label)
 
-            save_prediction(
-                "upload", uploaded.name, final_label, conf,
-                result["circle_found"], up_exposure, up_sharpen
-            )
-            st.success("Prediksi disimpan ke database.")
+            save_prediction("upload", uploaded.name, final_label, conf, result["circle_found"])
+            st.success("✅ Prediksi disimpan ke database.")
 
+<<<<<<< HEAD
     
     # TAB 2 — WEBCAM LIVE (UPGRADED)
     
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+    # ══════════════════════════════════════════════════════════════════════════
+    # TAB 2 — WEBCAM LIVE
+    # ══════════════════════════════════════════════════════════════════════════
+>>>>>>> 49273b9 (New layout and features)
     with tab_webcam:
         st.subheader("Live Webcam Detection")
 
@@ -763,11 +924,15 @@ def main() -> None:
             )
         else:
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 49273b9 (New layout and features)
             st.info(
                 "Pipeline per frame: **BGR → RGB → Grayscale → Inversi Warna → "
                 "Exposure +30% → Sharpen → Crop → Model → Threshold**\n\n"
                 "Overlay hijau = piring normal (di bawah threshold defek)."
             )
+<<<<<<< HEAD
 
             class DefectProcessor(VideoProcessorBase):
                 def __init__(self) -> None:
@@ -850,188 +1015,60 @@ def main() -> None:
                     f"Sharpen x{wc_sharpen:.1f} → "
                     f"Crop → Model → Threshold {wc_threshold:.0f}%"
                 )
+=======
+>>>>>>> 49273b9 (New layout and features)
 
-                st.divider()
-                rb_col, rb_info = st.columns([1, 3])
-                # with rb_col:
-                #     restart_clicked = st.button(
-                #         "Restart Stream",
-                #         key="btn_restart_stream",
-                #         use_container_width=True,
-                #         help="Matikan lalu nyalakan ulang kamera secara otomatis.",
-                #     )
-                with rb_info:
-                    st.info(
-                        "Setelah mengubah slider, matikan kamera lalu nyalakan kembali"
-                        "supaya nilai baru langsung diterapkan ke kamera.",
-                    )
-                # if restart_clicked:
-                #     # Set flag restart agar WebRTC di-stop dulu
-                #     st.session_state["_restarting"] = True
-                #     for k in list(st.session_state.keys()):
-                #         if k.startswith("webcam_") or "ceramic-defect-live" in k:
-                #             del st.session_state[k]
-                #     st.rerun()
-
-            # Alias lokal agar sisa kode tetap singkat
-            exposure    = wc_exposure
-            sharpen_amt = wc_sharpen
-            threshold   = wc_threshold
-
-            # ── Session state init ─────────────────────────────────────────────
-            for key, default in [
-                ("webcam_capture", None),
-                ("webcam_session_counts", {}),
-                ("webcam_session_total", 0),
-                ("webcam_last_save_time", 0.0),
-                ("webcam_fps_deque", deque(maxlen=30)),
-                ("webcam_auto_save", False),
-                ("webcam_save_cooldown", AUTOSAVE_COOLDOWN),
-            ]:
-                if key not in st.session_state:
-                    st.session_state[key] = default
-
-            # ── Kontrol webcam ─
-            col_ctrl1, col_ctrl2, col_ctrl3 = st.columns(3)
-            with col_ctrl1:
-                auto_save = st.toggle("Auto-Save ke DB", value=st.session_state.webcam_auto_save)
-                st.session_state.webcam_auto_save = auto_save
-            with col_ctrl2:
-                save_cd = st.number_input(
-                    "Cooldown Auto-Save (detik)", min_value=1.0, max_value=60.0,
-                    value=st.session_state.webcam_save_cooldown, step=1.0,
-                )
-                st.session_state.webcam_save_cooldown = save_cd
-            with col_ctrl3:
-                show_overlay = st.checkbox("Tampilkan Overlay Lengkap", value=True)
-
-            # ── Live metrics placeholders ──────────────────────────────────────
-            ph_metrics = st.empty()
-            ph_status  = st.empty()
-
-            # ── VideoProcessor ─
             class DefectProcessor(VideoProcessorBase):
                 def __init__(self) -> None:
-                    self._model      = model
-                    self._classes    = classes
-                    self._lock       = threading.Lock()
-                    self.result      = {
-                        "label": "-", "conf": 0.0, "circle": False,
-                        "original_label": None, "probs": None,
-                    }
-                    self.last_frame_rgb = None
-                    self._frame_times: deque = deque(maxlen=30)
-                    self._last_save   = 0.0
-                    self._last_proc   = 0.0  # FPS throttle
-
-                # Expose exposure & sharpen via properties (dibaca tiap frame)
-                @property
-                def _exposure(self):
-                    return exposure
-
-                @property
-                def _sharpen(self):
-                    return sharpen_amt
-
-                @property
-                def _threshold(self):
-                    return threshold
+                    self._model   = model
+                    self._classes = classes
+                    self.result   = {"label": "-", "conf": 0.0, "circle": False, "original_label": None}
 
                 def recv(self, frame: "av.VideoFrame") -> "av.VideoFrame":
-                    t0 = time.perf_counter()
-
                     img_bgr = frame.to_ndarray(format="bgr24")
                     img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-                    with self._lock:
-                        self.last_frame_rgb = img_rgb.copy()
+                    res               = preprocess(img_rgb)
+                    raw_label, conf, _ = predict(self._model, res["tensor"], self._classes)
+                    
+                    # Terapkan Threshold
+                    final_label, original_label = apply_threshold(raw_label, conf)
+                    
+                    self.result = {
+                        "label": final_label, 
+                        "conf": conf, 
+                        "circle": res["circle_found"],
+                        "original_label": original_label
+                    }
 
-                    # ── FPS throttle: skip inference if too soon ───────────────
-                    if (t0 - self._last_proc) < _MIN_FRAME_INTERVAL:
-                        # Return raw frame without re-running model
-                        return frame
-                    self._last_proc = t0
-
-                    res = preprocess(img_rgb,
-                                     exposure=self._exposure,
-                                     sharpen_amt=self._sharpen)
-
-                    with torch.no_grad():
-                        raw_label, conf, probs = predict(self._model, res["tensor"], self._classes)
-
-                    final_label, original_label = apply_threshold(raw_label, conf, self._threshold)
-
-                    with self._lock:
-                        self.result = {
-                            "label"         : final_label,
-                            "conf"          : conf,
-                            "circle"        : res["circle_found"],
-                            "original_label": original_label,
-                            "probs"         : probs,
-                        }
-
-                    # ── Auto-save ──────────────────────────────────────────
-                    now = time.time()
-                    auto_save_on = getattr(self, "_auto_save", False)
-                    cooldown     = getattr(self, "_save_cooldown", AUTOSAVE_COOLDOWN)
-                    if auto_save_on and (now - self._last_save) >= cooldown:
-                        save_prediction("webcam_live", "live_frame", final_label, conf,
-                                        res["circle_found"], self._exposure, self._sharpen)
-                        self._last_save = now
-
-                    # ── FPS tracking ───────────────────────────────────────
-                    self._frame_times.append(time.perf_counter())
-
-                    # ── Render output frame ────────────────────────────────
-                    # Tampilkan gambar hasil crop (grayscale → BGR)
+                    # Gunakan gambar yang sudah di-crop untuk ditampilkan di webcam
                     out_bgr = cv2.cvtColor(res["cropped"], cv2.COLOR_GRAY2BGR)
 
-                    if show_overlay:
+                    # Tampilan teks dan lingkaran pada Webcam
+                    if res["circle_found"] and res["circle_info"]:
+                        cx, cy, r = res["circle_info"]
                         h0, w0 = img_bgr.shape[:2]
                         h1, w1 = res["cropped"].shape[:2]
-
-                        # Lingkaran (di-scale ke ukuran cropped)
-                        if res["circle_found"] and res["circle_info"]:
-                            cx, cy, r = res["circle_info"]
-                            sx, sy = w1 / w0, h1 / h0
-                            cx2 = int(cx * sx); cy2 = int(cy * sy); r2 = int(r * min(sx, sy))
-                            c_color = (0, 200, 80) if final_label == "normal" else (0, 60, 220)
-                            cv2.circle(out_bgr, (cx2, cy2), r2, c_color, 2)
-                            cv2.circle(out_bgr, (cx2, cy2), 5, c_color, -1)
-
-                        # Label text
-                        if not res["circle_found"]:
-                            text       = "NO CIRCLE DETECTED"
-                            text_color = (0, 165, 255)
-                        elif final_label == "normal":
-                            text       = f"NORMAL ({raw_label} {conf:.0f}%)"
-                            text_color = (30, 220, 80)
+                        sx, sy = w1 / w0, h1 / h0
+                        cx2, cy2, r2 = int(cx * sx), int(cy * sy), int(r * min(sx, sy))
+                        cv2.circle(out_bgr, (cx2, cy2), r2, (0, 220, 0), 2)
+                        
+                        if final_label == "normal":
+                            text = f"NORMAL ({raw_label}: {conf:.1f}%)"
+                            text_color = (0, 255, 0)  # Hijau
                         else:
-                            text       = f"{final_label.upper()}  {conf:.0f}%"
-                            text_color = (0, 60, 220)
+                            text = f"{final_label.upper()}: {conf:.1f}%"
+                            text_color = (0, 0, 255)  # Merah untuk defek
+                    else:
+                        text = "BUKAN PIRING / RUSAK"
+                        text_color = (0, 165, 255)  # Oranye
 
-                        # Background behind text
-                        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_DUPLEX, 0.9, 2)
-                        cv2.rectangle(out_bgr, (8, 8), (tw + 16, th + 20), (0, 0, 0), -1)
-                        cv2.putText(out_bgr, text, (12, th + 12),
-                                    cv2.FONT_HERSHEY_DUPLEX, 0.9, text_color, 2, cv2.LINE_AA)
+                    cv2.putText(out_bgr, text, (10, 35),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.0, text_color, 2, cv2.LINE_AA)
 
-                        # Exposure & sharpen info (pojok kanan bawah)
-                        info_txt = f"EXP x{self._exposure:.2f}  SHP x{self._sharpen:.1f}  THR {self._threshold:.0f}%"
-                        cv2.putText(out_bgr, info_txt, (10, h1 - 10),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 200), 1, cv2.LINE_AA)
-
-                    # FPS display
-                    if len(self._frame_times) >= 2:
-                        elapsed = self._frame_times[-1] - self._frame_times[0]
-                        fps = (len(self._frame_times) - 1) / elapsed if elapsed > 0 else 0
-                        cv2.putText(out_bgr, f"FPS {fps:.1f}",
-                                    (out_bgr.shape[1] - 90, 28),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (180, 180, 180), 2, cv2.LINE_AA)
-
-                    t1 = time.perf_counter()
                     return av.VideoFrame.from_ndarray(out_bgr, format="bgr24")
 
+<<<<<<< HEAD
                 def get_fps(self) -> float:
                     ft = self._frame_times
                     if len(ft) < 2:
@@ -1069,11 +1106,17 @@ def main() -> None:
                 ]
             })
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+            RTC_CONFIG = RTCConfiguration(
+                {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+            )
+>>>>>>> 49273b9 (New layout and features)
 
             ctx = webrtc_streamer(
                 key="ceramic-defect-live",
                 video_processor_factory=DefectProcessor,
                 rtc_configuration=RTC_CONFIG,
+<<<<<<< HEAD
 <<<<<<< HEAD
                 media_stream_constraints={"video": True, "audio": False},
                 async_processing=True,
@@ -1124,124 +1167,60 @@ def main() -> None:
                     },
                     "audio": False,
                 },
+=======
+                media_stream_constraints={"video": True, "audio": False},
+>>>>>>> 49273b9 (New layout and features)
                 async_processing=True,
             )
 
-            # ── Live stats update 
             if ctx.video_processor:
-                # Sync auto-save settings into processor instance (thread-safe via simple attr)
-                ctx.video_processor._auto_save    = auto_save
-                ctx.video_processor._save_cooldown = save_cd
-
                 res = ctx.video_processor.result
-                fps = ctx.video_processor.get_fps()
-
-                # Update session counter
-                lbl = res["label"]
-                if lbl != "-":
-                    st.session_state.webcam_session_counts[lbl] = \
-                        st.session_state.webcam_session_counts.get(lbl, 0) + 1
-                    st.session_state.webcam_session_total += 1
-
-                # Metric cards
-                with ph_metrics.container():
-                    mc1, mc2, mc3, mc4 = st.columns(4)
-                    mc1.metric("FPS", f"{fps:.1f}")
-                    mc2.metric("Label", res["label"].upper() if res["label"] != "-" else "—")
-                    mc3.metric("Confidence", f"{res['conf']:.1f}%" if res["conf"] > 0 else "—")
-                    mc4.metric("Lingkaran", "Terdeteksi" if res["circle"] else "Tidak")
-
-                # Status
-                with ph_status.container():
-                    if not res["circle"]:
-                        st.error("Lingkaran piring tidak terdeteksi — arahkan kamera ke piring keramik.")
-                    elif res["label"] == "normal":
-                        st.success(
-                            f"NORMAL — Deteksi '{res['original_label']}' "
-                            f"({res['conf']:.1f}%) di bawah threshold {threshold:.0f}%"
+                
+                # Tampilan status di bawah webcam
+                if not res["circle"]:
+                    st.error("⚠️ **Lingkaran piring tidak terdeteksi.** Kemungkinan: Piring tidak berbentuk lingkaran, piring terlalu rusak, atau objek bukanlah piring.")
+                else:
+                    circle_txt = "✅ terdeteksi"
+                    if res["label"] == "normal":
+                        st.markdown(
+                            f"**Live →** 🟢 `NORMAL` — Deteksi {res['original_label']} ({res['conf']:.1f}%) "
+                            f"dibawah threshold | Lingkaran: {circle_txt}"
                         )
-                    elif res["label"] != "-":
-                        st.error(f"DEFEK: {res['label'].upper()} — Confidence {res['conf']:.1f}%")
+                    else:
+                        st.markdown(
+                            f"**Live →** `{res['label'].upper()}` — {res['conf']:.1f}%  "
+                            f"| Lingkaran: {circle_txt}"
+                        )
+                    
+                if st.button("💾 Simpan Prediksi Sekarang"):
+                    save_prediction("webcam", "live_frame",
+                                    res["label"], res["conf"], res["circle"])
+                    st.success(f"Disimpan: {res['label']} ({res['conf']:.1f}%)")
 
-                    # Session stats mini
-                    if st.session_state.webcam_session_total > 0:
-                        parts = [f"`{k}`: {v}" for k, v in st.session_state.webcam_session_counts.items()]
-                        st.caption(f"Session frames: {st.session_state.webcam_session_total} | " + " | ".join(parts))
-
-                # ── Tombol aksi 
-                st.divider()
-                col_cap, col_save, col_reset = st.columns(3)
-                with col_cap:
-                    if st.button("Capture & Analisis Frame"):
-                        with ctx.video_processor._lock:
-                            frm = ctx.video_processor.last_frame_rgb
-                        if frm is not None:
-                            st.session_state.webcam_capture = frm.copy()
-                        else:
-                            st.warning("Belum ada frame. Tunggu beberapa detik.")
-                with col_save:
-                    if st.button("Simpan Prediksi Sekarang"):
-                        save_prediction("webcam", "live_frame",
-                                        res["label"], res["conf"], res["circle"],
-                                        exposure, sharpen_amt)
-                        st.success(f"Disimpan: {res['label']} ({res['conf']:.1f}%)")
-                with col_reset:
-                    if st.button("Reset Session Stats"):
-                        st.session_state.webcam_session_counts = {}
-                        st.session_state.webcam_session_total  = 0
-                        st.rerun()
-
-                # Auto-save status indicator
-                if auto_save:
-                    st.info(f"Auto-save aktif setiap {save_cd:.0f} detik (hanya prediksi valid).")
-
-            # ── Analisis captured frame ────────────────────────────────────────
-            if st.session_state.webcam_capture is not None:
-                st.divider()
-                st.markdown("### Analisis Frame Terakhir")
-
-                cap_img    = st.session_state.webcam_capture
-                with st.spinner("Memproses frame…"):
-                    cap_result                   = preprocess(cap_img, exposure=exposure, sharpen_amt=sharpen_amt)
-                    cap_raw, cap_conf, cap_probs = predict(model, cap_result["tensor"], classes)
-                    cap_final, cap_orig          = apply_threshold(cap_raw, cap_conf, threshold)
-
-                show_pipeline_images(cap_img, cap_result)
-                st.divider()
-                show_result(cap_final, cap_conf, cap_probs, classes,
-                            cap_result["circle_found"], cap_orig, threshold)
-
-                col_sv, col_cl = st.columns(2)
-                with col_sv:
-                    if st.button("Simpan Hasil Capture"):
-                        save_prediction("webcam_capture", "captured_frame",
-                                        cap_final, cap_conf, cap_result["circle_found"],
-                                        exposure, sharpen_amt)
-                        st.success("Prediksi capture disimpan.")
-                with col_cl:
-                    if st.button("Hapus Capture"):
-                        st.session_state.webcam_capture = None
-                        st.rerun()
-
-    
+    # ══════════════════════════════════════════════════════════════════════════
     # TAB 3 — HISTORY
-    
+    # ══════════════════════════════════════════════════════════════════════════
     with tab_history:
-        st.subheader("Riwayat Prediksi (50 terakhir)")
+        st.subheader("Riwayat Prediksi (30 terakhir)")
 
         col_r, col_c = st.columns(2)
         with col_r:
-            if st.button("Refresh"):
+            if st.button("🔄 Refresh"):
                 st.rerun()
         with col_c:
+<<<<<<< HEAD
             if st.button("Hapus Semua"):
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+            if st.button("🗑️ Hapus Semua"):
+>>>>>>> 49273b9 (New layout and features)
                 clear_history()
                 st.success("Riwayat dihapus.")
                 st.rerun()
 
         rows = get_history()
         if rows:
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
             # Filter
@@ -1250,6 +1229,8 @@ def main() -> None:
             filtered = [r for r in rows if r[3] in filter_label]
 
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+>>>>>>> 49273b9 (New layout and features)
             st.table([
                 {
                     "ID"           : r[0],
@@ -1257,6 +1238,7 @@ def main() -> None:
                     "File"         : r[2],
                     "Label"        : r[3],
                     "Conf (%)"     : f"{r[4]:.2f}",
+<<<<<<< HEAD
 <<<<<<< HEAD
                     "Circle Found" : "✅" if r[5] else "❌",
                     "Waktu"        : r[6],
@@ -1270,10 +1252,17 @@ def main() -> None:
                 }
                 for r in filtered
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+                    "Circle Found" : "✅" if r[5] else "❌",
+                    "Waktu"        : r[6],
+                }
+                for r in rows
+>>>>>>> 49273b9 (New layout and features)
             ])
         else:
             st.info("Belum ada prediksi tersimpan.")
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 
 if __name__ == "__main__":
@@ -1339,3 +1328,10 @@ if __name__ == "__main__":
 if __name__ == "__main__":
     main()
 >>>>>>> 4634d35 (update WebRCT using metered.ca)
+=======
+
+if __name__ == "__main__":
+    main()
+
+    #BDCIHBHIVBOEUFBVIERBCI
+>>>>>>> 49273b9 (New layout and features)
